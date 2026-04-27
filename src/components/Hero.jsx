@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
-import * as THREE from 'three'
 import suman from '../assets/suman.png'
 
 const Hero = () => {
@@ -8,56 +7,61 @@ const Hero = () => {
   const heroRef = useRef(null)
 
   useEffect(() => {
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      alpha: true,
-      antialias: true
-    })
-
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    camera.position.z = 3
-
-    const particlesGeometry = new THREE.BufferGeometry()
-    const count = 2000
-    const positions = new Float32Array(count * 3)
-    for (let i = 0; i < count * 3; i++) {
-      positions[i] = (Math.random() - 0.5) * 10
-    }
-    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-
-    const particlesMaterial = new THREE.PointsMaterial({
-      size: 0.02,
-      color: '#a855f7',
-      transparent: true,
-      opacity: 0.8
-    })
-
-    const particles = new THREE.Points(particlesGeometry, particlesMaterial)
-    scene.add(particles)
-
     let animId
-    const animate = () => {
-      animId = requestAnimationFrame(animate)
-      particles.rotation.y += 0.0005
-      particles.rotation.x += 0.0002
-      renderer.render(scene, camera)
-    }
-    animate()
+    let renderer
+    let handleResize
 
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight
-      camera.updateProjectionMatrix()
+    import('three').then((THREE) => {
+      const scene = new THREE.Scene()
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvasRef.current,
+        alpha: true,
+        antialias: true
+      })
+
       renderer.setSize(window.innerWidth, window.innerHeight)
-    }
-    window.addEventListener('resize', handleResize)
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      camera.position.z = 3
+
+      const particlesGeometry = new THREE.BufferGeometry()
+      const count = 2000
+      const positions = new Float32Array(count * 3)
+      for (let i = 0; i < count * 3; i++) {
+        positions[i] = (Math.random() - 0.5) * 10
+      }
+      particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+
+      const particlesMaterial = new THREE.PointsMaterial({
+        size: 0.02,
+        color: '#a855f7',
+        transparent: true,
+        opacity: 0.8
+      })
+
+      const particles = new THREE.Points(particlesGeometry, particlesMaterial)
+      scene.add(particles)
+
+      const animate = () => {
+        animId = requestAnimationFrame(animate)
+        particles.rotation.y += 0.0005
+        particles.rotation.x += 0.0002
+        renderer.render(scene, camera)
+      }
+      animate()
+
+      handleResize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight
+        camera.updateProjectionMatrix()
+        renderer.setSize(window.innerWidth, window.innerHeight)
+      }
+      window.addEventListener('resize', handleResize)
+    })
 
     return () => {
-      window.removeEventListener('resize', handleResize)
-      cancelAnimationFrame(animId)
-      renderer.dispose()
+      if (handleResize) window.removeEventListener('resize', handleResize)
+      if (animId) cancelAnimationFrame(animId)
+      if (renderer) renderer.dispose()
     }
   }, [])
 
@@ -99,7 +103,7 @@ const Hero = () => {
       padding: '0 2rem',
       width: '100%'
     }}>
-      {/* Three.js Canvas - absolutely positioned, does NOT affect layout */}
+      {/* Three.js Canvas */}
       <canvas ref={canvasRef} style={{
         position: 'absolute',
         top: 0,
@@ -110,7 +114,7 @@ const Hero = () => {
         pointerEvents: 'none'
       }} />
 
-      {/* Content wrapper - takes full width properly */}
+      {/* Content wrapper */}
       <div style={{
         width: '100%',
         maxWidth: '1200px',
